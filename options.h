@@ -17,7 +17,7 @@
 /****************************************************************
 *	SERIAL TRANSMISSION											*
 *****************************************************************/
-#define ENABLE_TX               //enable serial TX.  Else, RB2 is degug output.
+//#define ENABLE_TX               //enable serial TX.  Else, RB2 is degug output.
 #define	TX_BUF_LEN	(32)		//length of transmit buffer 
 #define TERMCHAR 0x7F
 #define ESCCHAR  0x1B 

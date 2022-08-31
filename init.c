@@ -23,11 +23,42 @@ void SYSTEM_Initialize(void)
     //**************************************************************************
     // Setup SPI for the Qtouch chip
     // B5 is mosi (data out of pic)
-    // B4 is miso (data into pip)
-    // B3 is SCL
-    // B2 is CS
-    // B1 is nDRDY
     
+    //A0 is reset
+    LATAbits.LA0=0; //default low
+    TRISAbits.TRISA0=1; //output
+    
+    //B1 is nDRDY
+    TRISBbits.TRISB1=1; //B1 is input for DRDY
+    ANSELBbits.ANSELB1=0; //digital input buffer is enabled
+    WPUBbits.WPUB1=1; //pullup enabled
+    
+    //B2 is CS
+    LATBbits.LATB2=1;   //CS is initially high
+    TRISBbits.TRISB2=0; //B2 is CS output
+        
+    //B3 is SCL
+    RB3PPS=0x0D;  //Set B3 PPS to SCL
+    TRISBbits.TRISB3=0; //B3 is output
+    ANSELBbits.ANSELB3=0; //digital io. See section 26.2.1
+    SSP1CLKPPS=0x0D; //clock input to MSSP1 module.  See section 26.2.1.
+            
+    //B4 is MISO (data into pic)
+    SSP1DATPPS=0b00001100; //Set SDA PPS to PortB, pin 4
+    RB4PPS=0x0E; //not sure if this is needed, since pin is an input.
+    TRISBbits.TRISB4=1; //B4 is input
+    ANSELBbits.ANSELB4=0; //digital input buffer is enabled
+    
+    //B5 is MOSI
+    RB5PPS=0x0E; //B5 is SDO
+    TRISBbits.TRISB5=0; //B5 is output
+    
+    SSP1CON1bits.SSPEN=0; //turn it off before configuring
+    SSP1CON1bits.SSPM=2;  //SPI master, Fosc/16 (8MHz)
+    SSP1CON1bits.CKP=1;   //clock polarity idle high
+    SSP1STATbits.CKE=0;   //clock edge;
+    SSP1STATbits.SMP=1;   //sample at end
+    SSP1CON1bits.SSPEN=1; //turn it on
     
     
         //**************************************************************************
@@ -120,7 +151,7 @@ void SYSTEM_Initialize(void)
     //TRISB&=0b11011111; //B2 is an output
     
 #ifdef ENABLE_TX
-    RB0PPS=0x09; //B2 is TX1
+    RB0PPS=0x09; //B0 is TX1
     TRISBbits.TRISB2 =0; //B2 is an output
     //LATB2=1; //idle high
     ANSELBbits.ANSELB2=0;
@@ -163,7 +194,7 @@ void OSCILLATOR_Initialize(void)
     OSCCON3 = 0x00;
     // MFOEN disabled; LFOEN disabled; ADOEN disabled; SOSCEN disabled; EXTOEN disabled; HFOEN disabled; 
     OSCEN = 0x00;
-    // HFFRQ 64_MHz; 
+    // HFFRQ 16_MHz; 
     OSCFRQ = 0x08;
     // TUN 0; 
     OSCTUNE = 0x00;

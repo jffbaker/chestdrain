@@ -11,7 +11,9 @@
 #include "device_config.h"
 #include "options.h"
 #include "device_config.c"
+#include "qtouch.h"
 
+unsigned char p;
 
 
 char tx_idx;				//index to current byte
@@ -43,8 +45,6 @@ void __interrupt() ISR (void)
 //******************************************************************************
 void main(void)
 {
-    unsigned char i;
-    signed int stempint;
     
     // Initialize the device
     SYSTEM_Initialize();
@@ -52,6 +52,13 @@ void main(void)
     GIE=1;
     PEIE=1;
 
+    //reset the QT
+    delay_ms(2500);
+    LATAbits.LA0=0;
+    delay_ms(500);
+    LATAbits.LA0=1;
+    delay_ms(2500);
+    
     while (1)
     {
         while(!TMR0IF);
@@ -61,8 +68,9 @@ void main(void)
         
 #endif
         
-        wiggle();        
-
+        wiggle();
+                
+        p = spi_single(0x0F);   //should be non-zero
 #ifdef ENABLE_TX
         transmit();
 #endif

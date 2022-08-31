@@ -27,6 +27,7 @@
 unsigned long fract_mul(unsigned long A, unsigned long B);
 
 void delay(int j);
+void delay_ms(int j);
 void wiggle(void);
 void wiggle_high(void);
 void wiggle_low(void);

@@ -38,10 +38,29 @@ unsigned long fract_mul(unsigned long A, unsigned long B)
 //**********************************************************************/
 void delay(int j)
 {
-	int i = 0;
+	unsigned int i = 0;
 	for(i = 0; i < j; i++)	//dumb loop to waste time
 		continue;
 }//end of delay()
+
+//**********************************************************************/
+void delay_ms(int j)
+{
+    unsigned int i=0;
+    TMR2=0;
+    T2CON=0b11100100; //on, 1:64 pre, 1:16 post
+    T2CLKCON=0x02;
+    T2HLT=0x00;
+    T2PR=195;
+    for(i=0; i <j; i++)
+    {   
+        TMR2IF=0;
+        while(!TMR2IF);
+    }
+    T2CON=0x00;
+    return;
+}//end of delay()
+
 
 //**********************************************************************/
 unsigned long abs_long(signed long value)

@@ -9,7 +9,7 @@
 #define QTOUCH_H
 
 void qtouch_init(void);
-void spi_write_single(unsigned char address, unsigned char payload);
+unsigned char spi_single(unsigned char command);
 void spi_write_burst(unsigned char address,  unsigned char payload[], unsigned char n);
 
 // call with test= spi_read_single(a,&p); 
