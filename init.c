@@ -25,8 +25,9 @@ void SYSTEM_Initialize(void)
     // B5 is mosi (data out of pic)
     
     //A0 is reset
-    LATAbits.LA0=0; //default low
-    TRISAbits.TRISA0=1; //output
+    PORTAbits.RA0 =0; //default low
+    TRISAbits.TRISA0=0; //output
+    ODCONAbits.ODCA0=0;
     
     //B1 is nDRDY
     TRISBbits.TRISB1=1; //B1 is input for DRDY

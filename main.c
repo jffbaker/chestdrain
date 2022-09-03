@@ -54,9 +54,9 @@ void main(void)
 
     //reset the QT
     delay_ms(2500);
-    LATAbits.LA0=0;
+    PORTAbits.RA0=0;
     delay_ms(500);
-    LATAbits.LA0=1;
+    PORTAbits.RA0=1;
     delay_ms(2500);
     
     while (1)
@@ -68,9 +68,12 @@ void main(void)
         
 #endif
         
-        wiggle();
+
                 
         p = spi_single(0x0F);   //should be non-zero
+        //p = spi_single(0x0F);   //should be non-zero
+        delay_ms(10); //just to let spi finish
+        wiggle();
 #ifdef ENABLE_TX
         transmit();
 #endif

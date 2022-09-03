@@ -10,12 +10,13 @@
 
 
 void qtouch_init(void){
-//    //wait for accel power up
-//    delay(2000);                      //wait for reset to complete
-//    unsigned char p=0;
-//    while(p!=0x44){
-//        p = spi_read_single(0x0F);   //should be non-zero
-//    }
+    unsigned char p=0;
+
+    //wait for qtouch initial power up
+    delay_ms(2300);              
+    while(p!=0xF0){
+        p = spi_single(0x0F);   //should be non-zero
+    }
 //    // set up accel registers
 //    spi_write_single(0x20,0b00010011); //1.6Hz, low power mode, LP Mode 4
 //    spi_write_single(0x21,0b00010110); //no boot, no reset, disconnect CS pullup, cont update, auto inc, disable I2C, SPI is 4 wire
