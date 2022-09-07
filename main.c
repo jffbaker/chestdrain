@@ -11,7 +11,7 @@
 #include "device_config.h"
 #include "options.h"
 #include "device_config.c"
-#include "qtouch.h"
+#include "newhaven.h"
 
 unsigned char p;
 
@@ -53,11 +53,16 @@ void main(void)
     PEIE=1;
 
     //reset the QT
-    delay_ms(2500);
-    PORTAbits.RA0=0;
-    delay_ms(500);
-    PORTAbits.RA0=1;
-    delay_ms(2500);
+//    delay_ms(2500);
+//    PORTAbits.RA0=0;
+//    delay_ms(500);
+//    PORTAbits.RA0=1;
+//    delay_ms(2500);
+    nhd_init();
+    
+    nhd_whiteScreen();
+    
+    nhd_writeChar(0b10000100, 0, 0);
     
     while (1)
     {
@@ -67,12 +72,9 @@ void main(void)
 #ifndef ENABLE_TX
         
 #endif
-        
+        wiggle();
 
-                
-        p = spi_single(0x0F);   //should be non-zero
-        //p = spi_single(0x0F);   //should be non-zero
-        delay_ms(10); //just to let spi finish
+        delay(157);
         wiggle();
 #ifdef ENABLE_TX
         transmit();

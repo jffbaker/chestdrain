@@ -29,10 +29,9 @@ void SYSTEM_Initialize(void)
     TRISAbits.TRISA0=0; //output
     ODCONAbits.ODCA0=0;
     
-    //B1 is nDRDY
-    TRISBbits.TRISB1=1; //B1 is input for DRDY
-    ANSELBbits.ANSELB1=0; //digital input buffer is enabled
-    WPUBbits.WPUB1=1; //pullup enabled
+    //B1 is nRES
+    PORTBbits.RB1=0; //display initially held in reset
+    TRISBbits.TRISB1=0; //B1 reset output
     
     //B2 is CS
     LATBbits.LATB2=1;   //CS is initially high
@@ -44,15 +43,15 @@ void SYSTEM_Initialize(void)
     ANSELBbits.ANSELB3=0; //digital io. See section 26.2.1
     SSP1CLKPPS=0x0D; //clock input to MSSP1 module.  See section 26.2.1.
             
-    //B4 is MISO (data into pic)
-    SSP1DATPPS=0b00001100; //Set SDA PPS to PortB, pin 4
-    RB4PPS=0x0E; //not sure if this is needed, since pin is an input.
-    TRISBbits.TRISB4=1; //B4 is input
-    ANSELBbits.ANSELB4=0; //digital input buffer is enabled
+    //B4 is MOSI
+    RB4PPS=0x0E; //B5 is SDO
+    TRISBbits.TRISB4=0; //B5 is output
     
-    //B5 is MOSI
-    RB5PPS=0x0E; //B5 is SDO
-    TRISBbits.TRISB5=0; //B5 is output
+    //B5 is MISO (data into pic)
+    SSP1DATPPS=0b00001101; //Set SDA PPS to PortB, pin 5
+    RB5PPS=0x0E; //not sure if this is needed, since pin is an input.
+    TRISBbits.TRISB5=1; //B4 is input
+    ANSELBbits.ANSELB5=0; //digital input buffer is enabled
     
     SSP1CON1bits.SSPEN=0; //turn it off before configuring
     SSP1CON1bits.SSPM=2;  //SPI master, Fosc/16 (8MHz)
@@ -153,12 +152,12 @@ void SYSTEM_Initialize(void)
     
 #ifdef ENABLE_TX
     RB0PPS=0x09; //B0 is TX1
-    TRISBbits.TRISB2 =0; //B2 is an output
+    TRISBbits.TRISB0 =0; //B2 is an output
     //LATB2=1; //idle high
-    ANSELBbits.ANSELB2=0;
-    WPUBbits.WPUB2=0;
-    ODCONBbits.ODCB2=0; //push-pull
-    SLRCONBbits.SLRB2=0; //max slew rate
+    ANSELBbits.ANSELB0=0;
+    WPUBbits.WPUB0=0;
+    ODCONBbits.ODCB0=0; //push-pull
+    SLRCONBbits.SLRB0=0; //max slew rate
     
     
     BAUD1CONbits.BRG16=1; //use 16 bit generator
@@ -181,9 +180,6 @@ void SYSTEM_Initialize(void)
 //
 //    BAUD1CONbits.ABDEN=0; //disable auto baud rate detector
 //    BAUD1CONbits.WUE=0; //wake up on receiver disabled
-#else
-    LATBbits.LATB2=0;
-    TRISBbits.TRISB2=0;
 #endif
 }
 

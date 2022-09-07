@@ -3,6 +3,7 @@
 #include "util.h"
 #include "options.h"
 #include "qtouch.h"
+#include "globals.h"
 
 #define CS_LOW()    LATB2=0
 #define CS_HIGH()   LATB2=1
@@ -10,38 +11,40 @@
 
 
 void qtouch_init(void){
-    unsigned char p=0;
-
     //wait for qtouch initial power up
-    delay_ms(2300);              
-    while(p!=0xF0){
-        p = spi_single(0x0F);   //should be non-zero
-    }
-//    // set up accel registers
-//    spi_write_single(0x20,0b00010011); //1.6Hz, low power mode, LP Mode 4
-//    spi_write_single(0x21,0b00010110); //no boot, no reset, disconnect CS pullup, cont update, auto inc, disable I2C, SPI is 4 wire
-//    spi_write_single(0x22,0b00000010); //no self test, push-pull, no latching, active high, write reg for single conversion, don't start now
-//    spi_write_single(0x22,0b00000010); //no self test, push-pull, no latching, active high, write reg for single conversion, don't start now
-//    //spi_write_single(0x23,0b00000000); //nothing routed to int1
-//    spi_write_single(0x23,0b00000001); //data ready is on int1
-//    spi_write_single(0x24,0b00000000); //nothing routed to int2
-//    //spi_write_single(0x24,0b00000001); //data ready routed to int2
-//    spi_write_single(0x25,0b00000000); //LPF cutoff is ODR/2, +/-2g, LP, no Low noise
-//    spi_write_single(0x3F,0b10000000); //DRDY is pulsed, no INT2 routing, no...
+    //delay_ms(120);              
+//    while(p!=0xF0){
+//        p = spi_single(0x0F);   //should be non-zero
+//    }
+    
+    p=spi_single(0x04);//Force reset
+    p=spi_single(0x04);//Force reset
+    
+    delay_ms(10);
+    delay_ms(10);
+    
 }
 
 /* clocks one byte out while clocking one byte in  */
 unsigned char spi_single(unsigned char command){
     unsigned char tempchar;
+    
+    //wait 110us for DRDY to go low from any previous comms
+    delay(157); 
+    
+    //wait for DRDY to go high
     tempchar=PORTB&0x02;
     while(!tempchar) //wait for DRDY line to be high
     {
         tempchar=PORTB&0x02;
     }
+    
+    //Transmit byte
     CS_LOW();
     SSP1BUF=command;
     while(BF==0);
     CS_HIGH();
+    
     return(SSP1BUF); //Does this read clear BF?
 }
 

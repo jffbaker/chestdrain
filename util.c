@@ -38,7 +38,10 @@ unsigned long fract_mul(unsigned long A, unsigned long B)
 //**********************************************************************/
 void delay(int j)
 {
-	unsigned int i = 0;
+    //100   70us
+    //143   100us
+    //157   110us
+    unsigned int i = 0;
 	for(i = 0; i < j; i++)	//dumb loop to waste time
 		continue;
 }//end of delay()

@@ -13,9 +13,18 @@
 	includes all external declarations for global variables
 */
 #include "options.h"
+
+//For serial transmission, usually debug
 extern 	char		tx_idx;				//index to current byte
 extern	char		tx_len;				//number of bytes to  transmit
 extern	char		tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h	
+
+//For Newhaven display
+extern unsigned char row_address[4];
+extern unsigned char row_bit;
+extern unsigned char cursor_row, cursor_col;
+
+extern unsigned char p;
 
 extern unsigned char data_ready;
 
