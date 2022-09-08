@@ -14,6 +14,8 @@
 */
 #include "options.h"
 
+extern unsigned char button_buffer;
+
 //For serial transmission, usually debug
 extern 	char		tx_idx;				//index to current byte
 extern	char		tx_len;				//number of bytes to  transmit
@@ -23,6 +25,24 @@ extern	char		tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h
 extern unsigned char row_address[4];
 extern unsigned char row_bit;
 extern unsigned char cursor_row, cursor_col;
+
+//flags
+typedef union{
+	unsigned char byte;
+	struct{
+	unsigned  char  button_pressed:1;  			
+	unsigned  char  bit1:1;  		
+	unsigned  char  bit2:1;  
+	unsigned  char  bit3:1;  
+	unsigned  char  bit4:1;  
+	unsigned  char  bit5:1; 
+	unsigned  char  bit6:1;  
+	unsigned  char  bit7:1;	
+	}bits;
+}flag_t;
+
+extern flag_t flag;
+
 
 extern unsigned char p;
 

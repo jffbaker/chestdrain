@@ -14,11 +14,19 @@
 #include "newhaven.h"
 
 unsigned char p;
+unsigned char button_buffer;
 
 
 char tx_idx;				//index to current byte
 char tx_len;				//number of bytes to  transmit
 char tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h
+
+
+void check_butt(); //check button and affect flag
+
+flag_t flag;
+
+
 #ifdef ENABLE_TX
 void transmit(void);
 #endif
@@ -30,12 +38,6 @@ void __interrupt() ISR (void)
     if(TMR0IE == 1 && TMR0IF == 1){
         TMR0IF=0;      //clear flag
         //wiggle();
-    }
-    else if(IOCIE==1 && IOCIF==1){
-        IOCAF=0;
-        IOCIF=0;
-        wiggle();
-        delay_ms(20); //debounce.  Is this ok? Maybe hardware debounce.
     }
             
 #ifdef ENABLE_TX
@@ -60,21 +62,103 @@ void main(void)
     GIE=1;
     PEIE=1;
 
+    flag.byte=0x00;
+    button_buffer=0x00;
+    
     nhd_init();
     
     nhd_whiteScreen();
     
     nhd_writeChar(0x30, 0, 0);
     
-    while (1);
-//    {
-//        while(!TMR0IF);
-//        TMR0IF=0;
+    while (1)
+    {
+        while(!TMR6IF);
+        TMR6IF=0;
+        check_butt();
+        //wiggle();
+
+#ifndef ENABLE_TX
+        //transmit();
+#endif
+    }
+}
+
+/*****************************************************************************************
+ *Function Name:check_butt
+ *
+ *Description:  Checks if button is pressed.  Stores button presses in bits of 
+ * button_buffer.  Checks to see if button_buffer contains a press and release.
+ *
+ * Affects: flags.bits.button_pressed
+ * Returns:  nothing
+ *
+****************************************************************************************/
+void check_butt() 
+{
+    unsigned char temp;
+
+    temp=PORTA&0x01; //low if pressed 
+
+    button_buffer=button_buffer<<1;
+    
+    if(!temp){
+        button_buffer|=0x01;
+    }
+
+    if((button_buffer&0x0F) == 0b00001100){
+        flag.bits.button_pressed=1;
+        button_buffer=0x00;
+        wiggle();
+    }
+    
+
+
+
+
+//	buttons[0] = PORTC &  EXT_BTNS;
+//	
+//	if(buttons[0]==buttons[1] && buttons[0]!=last_ext_button_state)	
+//	{
+//		
+//		if (buttons[0]&EXT_LT_BTN)
+//		{
+//			click_buffer&=0b11111110;
+//			flag.ext_left_button=0;
+//		}
+//		else
+//		{
+//			click_buffer|=0b00000001;
+//			flag.ext_left_button=1;
+//		}
 //
-//#ifndef ENABLE_TX
-//        transmit();
-//#endif
-//    }
+//		if (buttons[0]&EXT_RT_BTN)
+//		{
+//			click_buffer&=0b11111101;
+//			flag.ext_right_button=0;
+//		}
+//		else
+//		{
+//			click_buffer|=0b00000010;
+//			flag.ext_right_button=1;
+//		}
+//
+//		click_len=1;
+//		last_ext_button_state=buttons[0];
+//	}
+//
+//	if(flag.ext_left_button)	//if held continue sending
+//	{
+//		click_buffer|=0b00000001;
+//		click_len=1;
+//	}
+//	if(flag.ext_right_button)	//if held continue sending
+//	{
+//		click_buffer|=0b00000010;
+//		click_len=1;	
+//	}
+//	
+    return;
 }
 
 /************************************************************************************

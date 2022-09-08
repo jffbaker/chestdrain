@@ -12,7 +12,6 @@ void SYSTEM_Initialize(void)
     PMD_Initialize();
     OSCILLATOR_Initialize();
     
-    
     //**************************************************************************
     //set up Timer 0 as 1s interrupt with external 32.768kHz crystal
     OSCENbits.SOSCEN=1;
@@ -26,7 +25,16 @@ void SYSTEM_Initialize(void)
     TRISCbits.TRISC3=0;
     RC3PPS=0x0F;
     TMR0IF=0;
-    TMR0IE=1;
+    //TMR0IE=1;
+    
+    //**************************************************************************
+    //set up Timer 6 as a 10 ms heartbeat timer
+    T6PR=0x9C; //about 10ms
+    T6CON=0b11101111; //off, 64 pre, 16 post 
+    T6CLKCON=0b00000001; //Fosc/4
+    //64e6/(4*64*16)=64 tics, so 256 tics is 16,4ms
+    TMR6IE=0;
+    TMR6IF=0;
 
     //**************************************************************************
     // Setup SPI for the Newhaven display chip
@@ -64,13 +72,11 @@ void SYSTEM_Initialize(void)
     SSP1CON1bits.SSPEN=1; //turn it on
     
     //*************************************************************************
-    //setup A0 as IOC button, with pullup and int on rising edge (release)
+    //setup A0 as button detector with pullup
     TRISAbits.TRISA0=1;
     ANSELAbits.ANSELA0=0; //digital io
     WPUAbits.WPUA0=1; //pull up enabled
-    IOCAPbits.IOCAP0=1; //int on release
-    IOCIF=0;
-    IOCIE=1;
+    
     
     
         //**************************************************************************
