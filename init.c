@@ -14,20 +14,23 @@ void SYSTEM_Initialize(void)
     
     
     //**************************************************************************
-    //set up Timer 0 as timer gate
-    T0CON0=0b10010000; //On, 16 bit, 1:1 postscaler  62.5ns tics; 4.096ms rollovers 
-    T0CON1=0b01000001;  //Fosc/4, sync, 1:2 prescaler gives 125ns tics, 8.192ms rollovers
+    //set up Timer 0 as 1s interrupt with external 32.768kHz crystal
+    OSCENbits.SOSCEN=1;
+    OSCCON3bits.SOSCPWR=1; //high power mode
+    //SAFETY TO-DO- add a timeout to this external oscillator turn-on
+    //just using a for-loop and delay
+    while(!OSCSTATbits.SOR);
+    //I expected this to give 32768 tics per sec, but it gives 1 per 2s
+    T0CON0=0b10010000; //On, 16 bit, 1:1 postscaler 1/32768 tics
+    T0CON1=0b10110000;  //SOSC, async, 1:1
+    TRISCbits.TRISC3=0;
+    RC3PPS=0x0F;
     TMR0IF=0;
-    TMR0IE=0;
+    TMR0IE=1;
 
     //**************************************************************************
-    // Setup SPI for the Qtouch chip
+    // Setup SPI for the Newhaven display chip
     // B5 is mosi (data out of pic)
-    
-    //A0 is reset
-    PORTAbits.RA0 =0; //default low
-    TRISAbits.TRISA0=0; //output
-    ODCONAbits.ODCA0=0;
     
     //B1 is nRES
     PORTBbits.RB1=0; //display initially held in reset
@@ -59,6 +62,15 @@ void SYSTEM_Initialize(void)
     SSP1STATbits.CKE=0;   //clock edge;
     SSP1STATbits.SMP=1;   //sample at end
     SSP1CON1bits.SSPEN=1; //turn it on
+    
+    //*************************************************************************
+    //setup A0 as IOC button, with pullup and int on rising edge (release)
+    TRISAbits.TRISA0=1;
+    ANSELAbits.ANSELA0=0; //digital io
+    WPUAbits.WPUA0=1; //pull up enabled
+    IOCAPbits.IOCAP0=1; //int on release
+    IOCIF=0;
+    IOCIE=1;
     
     
         //**************************************************************************

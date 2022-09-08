@@ -29,7 +29,15 @@ void __interrupt() ISR (void)
     // interrupt handler
     if(TMR0IE == 1 && TMR0IF == 1){
         TMR0IF=0;      //clear flag
-    }    
+        //wiggle();
+    }
+    else if(IOCIE==1 && IOCIF==1){
+        IOCAF=0;
+        IOCIF=0;
+        wiggle();
+        delay_ms(20); //debounce.  Is this ok? Maybe hardware debounce.
+    }
+            
 #ifdef ENABLE_TX
     if(PIE3bits.TX1IE && PIR3bits.TX1IF)		// Is transmit enabled, and is the buffer empty?
 	{
@@ -52,34 +60,21 @@ void main(void)
     GIE=1;
     PEIE=1;
 
-    //reset the QT
-//    delay_ms(2500);
-//    PORTAbits.RA0=0;
-//    delay_ms(500);
-//    PORTAbits.RA0=1;
-//    delay_ms(2500);
     nhd_init();
     
     nhd_whiteScreen();
     
-    nhd_writeChar(0b10000100, 0, 0);
+    nhd_writeChar(0x30, 0, 0);
     
-    while (1)
-    {
-        while(!TMR0IF);
-        TMR0IF=0;
-
-#ifndef ENABLE_TX
-        
-#endif
-        wiggle();
-
-        delay(157);
-        wiggle();
-#ifdef ENABLE_TX
-        transmit();
-#endif
-    }
+    while (1);
+//    {
+//        while(!TMR0IF);
+//        TMR0IF=0;
+//
+//#ifndef ENABLE_TX
+//        transmit();
+//#endif
+//    }
 }
 
 /************************************************************************************
