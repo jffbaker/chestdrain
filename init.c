@@ -78,14 +78,7 @@ void SYSTEM_Initialize(void)
     SSP1CON1bits.SSPEN=0; //turn it off before configuring
     SSP1CON1bits.SSPM=2;  //SPI master, Fosc/16 (8MHz)
 
- 
-    //For Newhaven Display
-//        SSP1CON1bits.CKP=1;   //clock polarity idle high
-//    SSP1STATbits.CKE=0;   //clock edge; 
-//    SSP1STATbits.SMP=1;   //sample at end
-
-//    //For ADI7147
-    SSP1CON1bits.CKP=0;   //clock polarity idle high
+    SSP1CON1bits.CKP=1;   //clock polarity idle high
     SSP1STATbits.CKE=0;   //clock edge; 
     SSP1STATbits.SMP=1;   //sample at end(1) vs. sample in middle(0)
     

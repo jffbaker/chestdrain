@@ -27,7 +27,7 @@ extern unsigned char row_address[4];
 extern unsigned char row_bit;
 extern unsigned char cursor_row, cursor_col;
 
-extern unsigned int adi_buffer[ADI_BUF_LEN];
+extern unsigned int adi_buf[ADI_BUF_LEN];
 
 
 //flags

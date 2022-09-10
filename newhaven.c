@@ -74,7 +74,7 @@ void nhd_init(void){
 
 void nhd_splash_screen(){
     unsigned char message[15]="VENTURA MEDICAL";
-    nhd_writeMessage(message,15,1,4);
+    nhd_writeMessage(message,15,1,2);
 }
 
 void nhd_scroll_start(){

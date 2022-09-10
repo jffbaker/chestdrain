@@ -65,34 +65,24 @@ void main(void)
     GIE=1;
     PEIE=1;
 
-//    nhd_init(); //display
-//    adi_init(); //cap sensing chip
+    nhd_init(); //display
+
+    //    adi_init(); //cap sensing chip
     
     //initialize variables;
     flag.byte=0x00;
     button_buffer=0x00;
     
 
-
-    
-    
-    adi_write_single(0x0007,0x0FFF);
-    //delay_ms(1000);
-    x=adi_read_single(0x0007);
-    
-
     //nhd_whiteScreen();
-    
-//    nhd_writeChar(0x30, 1, 4);
-//    char m[4];
-//    m[0]="F";
-//    m[1]="U";
-//    m[2]="C";
-//    m[3]="K";
-//    nhd_writeMessage(m,4,1,10);
-    
-//    nhd_splash_screen();
+      nhd_splash_screen();
 
+    //adi_write_single(0x0007,0x0AAA);
+    //delay_ms(1000);
+    //x=adi_read_single(0x0017);
+
+    adi_init();  
+      
     while (1)
     {
         while(!TMR6IF);
