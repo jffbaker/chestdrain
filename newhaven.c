@@ -19,7 +19,6 @@
 
 #define CS_LOW()    LATB2=0
 #define CS_HIGH()   LATB2=1
-#define nRES()      PORTB&0b00000010 //B1
 
 unsigned char row_address[4];
 unsigned char row_bit;
@@ -73,6 +72,16 @@ void nhd_init(void){
     delay_ms(100); //delay    
 }
 
+void nhd_splash_screen(){
+    unsigned char message[15]="VENTURA MEDICAL";
+    nhd_writeMessage(message,15,1,4);
+}
+
+void nhd_scroll_start(){
+    
+}
+
+
 void nhd_clear()
 {
     nhd_command(0x01);
@@ -80,28 +89,21 @@ void nhd_clear()
     cursor_col=0;
 }
 
-void nhd_setCursor(unsigned char col, unsigned char row)
+void nhd_writeChar(unsigned char c, unsigned char row, unsigned char col)
 {
-    cursor_row=row;
-    cursor_col=col;
+    nhd_command(row_address[row]+col); //write location
+    nhd_data(c); //write char
+
 }
 
-void nhd_writeChar(unsigned char c, unsigned char col, unsigned char row)
-{
-    nhd_setCursor(col,row);
-    nhd_command(row_address[row]+cursor_col); //write location
-    nhd_data(c); //write char
-    // Update cursor position. Wrap around if necessary.
-    cursor_col++;
-    if (cursor_col >= COLS) {
-      cursor_row++;
-      cursor_col = 0;
+void nhd_writeMessage(unsigned char m[], unsigned char length, unsigned char row, unsigned char col){
+    unsigned char i;
+    nhd_command(row_address[row]+col);
+    for (i=0;i<length;i++){
+        nhd_data(m[i]);
     }
-    if (cursor_row >= ROWS){
-        cursor_row = 0;
-    }
-        
 }
+
 
 void nhd_whiteScreen()
 {

@@ -12,20 +12,23 @@
 #include "options.h"
 #include "device_config.c"
 #include "newhaven.h"
+#include "adi.h"
 
 unsigned char p;
 unsigned char button_buffer;
+unsigned char fault_code;
 
+unsigned int adi_buf[ADI_BUF_LEN];
 
 char tx_idx;				//index to current byte
 char tx_len;				//number of bytes to  transmit
 char tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h
 
-
 void check_butt(); //check button and affect flag
 
 flag_t flag;
 
+unsigned int x;
 
 #ifdef ENABLE_TX
 void transmit(void);
@@ -62,21 +65,39 @@ void main(void)
     GIE=1;
     PEIE=1;
 
+//    nhd_init(); //display
+//    adi_init(); //cap sensing chip
+    
+    //initialize variables;
     flag.byte=0x00;
     button_buffer=0x00;
     
-    nhd_init();
+
+
     
-    nhd_whiteScreen();
     
-    nhd_writeChar(0x30, 0, 0);
+    adi_write_single(0x0007,0x0FFF);
+    //delay_ms(1000);
+    x=adi_read_single(0x0007);
     
+
+    //nhd_whiteScreen();
+    
+//    nhd_writeChar(0x30, 1, 4);
+//    char m[4];
+//    m[0]="F";
+//    m[1]="U";
+//    m[2]="C";
+//    m[3]="K";
+//    nhd_writeMessage(m,4,1,10);
+    
+//    nhd_splash_screen();
+
     while (1)
     {
         while(!TMR6IF);
         TMR6IF=0;
         check_butt();
-        //wiggle();
 
 #ifndef ENABLE_TX
         //transmit();
@@ -109,57 +130,8 @@ void check_butt()
     if((button_buffer&0x0F) == 0b00001100){
         flag.bits.button_pressed=1;
         button_buffer=0x00;
-        wiggle();
     }
-    
-
-
-
-
-//	buttons[0] = PORTC &  EXT_BTNS;
-//	
-//	if(buttons[0]==buttons[1] && buttons[0]!=last_ext_button_state)	
-//	{
-//		
-//		if (buttons[0]&EXT_LT_BTN)
-//		{
-//			click_buffer&=0b11111110;
-//			flag.ext_left_button=0;
-//		}
-//		else
-//		{
-//			click_buffer|=0b00000001;
-//			flag.ext_left_button=1;
-//		}
-//
-//		if (buttons[0]&EXT_RT_BTN)
-//		{
-//			click_buffer&=0b11111101;
-//			flag.ext_right_button=0;
-//		}
-//		else
-//		{
-//			click_buffer|=0b00000010;
-//			flag.ext_right_button=1;
-//		}
-//
-//		click_len=1;
-//		last_ext_button_state=buttons[0];
-//	}
-//
-//	if(flag.ext_left_button)	//if held continue sending
-//	{
-//		click_buffer|=0b00000001;
-//		click_len=1;
-//	}
-//	if(flag.ext_right_button)	//if held continue sending
-//	{
-//		click_buffer|=0b00000010;
-//		click_len=1;	
-//	}
-//	
-    return;
-}
+}    
 
 /************************************************************************************
 void transmit()
@@ -240,4 +212,4 @@ void transmit()
 #endif //ENABLE_TX
 /**
  End of File
-*/
+ */

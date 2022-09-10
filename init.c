@@ -37,10 +37,20 @@ void SYSTEM_Initialize(void)
     TMR6IF=0;
 
     //**************************************************************************
-    // Setup SPI for the Newhaven display chip
+    // Setup SPI for the Newhaven display chip and ADI7147
     // B5 is mosi (data out of pic)
     
-    //B1 is nRES
+    
+    //B0 is CS for ADI
+    RB0PPS=0x00;  //crazy that this is necessary
+    LATBbits.LATB0=1;   //CS is initially high
+    TRISBbits.TRISB0=0; //B2 is CS output
+    ANSELBbits.ANSELB0=0;
+    WPUBbits.WPUB0=0;
+    ODCONBbits.ODCB0=0; //push-pull
+    SLRCONBbits.SLRB0=0; //max slew rate
+    
+    //B1 is nRES for Newhaven
     PORTBbits.RB1=0; //display initially held in reset
     TRISBbits.TRISB1=0; //B1 reset output
     
@@ -51,25 +61,36 @@ void SYSTEM_Initialize(void)
     //B3 is SCL
     RB3PPS=0x0D;  //Set B3 PPS to SCL
     TRISBbits.TRISB3=0; //B3 is output
+    SLRCONBbits.SLRB3=0; //max drive
     ANSELBbits.ANSELB3=0; //digital io. See section 26.2.1
     SSP1CLKPPS=0x0D; //clock input to MSSP1 module.  See section 26.2.1.
             
     //B4 is MOSI
-    RB4PPS=0x0E; //B5 is SDO
-    TRISBbits.TRISB4=0; //B5 is output
+    RB4PPS=0x0E; //B4 is SDO
+    TRISBbits.TRISB4=0; //B4 is output
     
     //B5 is MISO (data into pic)
     SSP1DATPPS=0b00001101; //Set SDA PPS to PortB, pin 5
     RB5PPS=0x0E; //not sure if this is needed, since pin is an input.
-    TRISBbits.TRISB5=1; //B4 is input
+    TRISBbits.TRISB5=1; //B5 is input
     ANSELBbits.ANSELB5=0; //digital input buffer is enabled
     
     SSP1CON1bits.SSPEN=0; //turn it off before configuring
     SSP1CON1bits.SSPM=2;  //SPI master, Fosc/16 (8MHz)
-    SSP1CON1bits.CKP=1;   //clock polarity idle high
-    SSP1STATbits.CKE=0;   //clock edge;
-    SSP1STATbits.SMP=1;   //sample at end
+
+ 
+    //For Newhaven Display
+//        SSP1CON1bits.CKP=1;   //clock polarity idle high
+//    SSP1STATbits.CKE=0;   //clock edge; 
+//    SSP1STATbits.SMP=1;   //sample at end
+
+//    //For ADI7147
+    SSP1CON1bits.CKP=0;   //clock polarity idle high
+    SSP1STATbits.CKE=0;   //clock edge; 
+    SSP1STATbits.SMP=1;   //sample at end(1) vs. sample in middle(0)
+    
     SSP1CON1bits.SSPEN=1; //turn it on
+    
     
     //*************************************************************************
     //setup A0 as button detector with pullup
@@ -77,7 +98,13 @@ void SYSTEM_Initialize(void)
     ANSELAbits.ANSELA0=0; //digital io
     WPUAbits.WPUA0=1; //pull up enabled
     
-    
+    //**************************************************************************
+    //set up Timer 2 for delay_ms() in util.c.  Off for now.
+    T2CON=0b01100100; //off, 1:64 pre, 1:16 post
+    T2CLKCON=0x02;
+    T2HLT=0x00;
+    T2PR=195;
+    TMR2IE=0;
     
         //**************************************************************************
 //    //set up Timer 5 as ZCD qaulity checker
@@ -148,15 +175,6 @@ void SYSTEM_Initialize(void)
     //Setup pins for controlling oscillators
 //    TRISA5=0; //A5 is top oscillator power
 //    TRISC2=0; //C2 is bottom oscillator power
-    
-    
-    //**************************************************************************
-    //Setup ZCD
-//    ANSELB0=1; //analog input on B0
-//    WPUB0=0;    //pullup disabled
-//    ZCDCON=0b10000011;  //on, not inverted, int on high and low going
-//    ZCDIE=0;
-    
     
     //**************************************************************************
     //Setup B3 for controlling relay

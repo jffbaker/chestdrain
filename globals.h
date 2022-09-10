@@ -15,6 +15,7 @@
 #include "options.h"
 
 extern unsigned char button_buffer;
+extern unsigned char fault_code;
 
 //For serial transmission, usually debug
 extern 	char		tx_idx;				//index to current byte
@@ -26,18 +27,21 @@ extern unsigned char row_address[4];
 extern unsigned char row_bit;
 extern unsigned char cursor_row, cursor_col;
 
+extern unsigned int adi_buffer[ADI_BUF_LEN];
+
+
 //flags
 typedef union{
 	unsigned char byte;
 	struct{
-	unsigned  char  button_pressed:1;  			
-	unsigned  char  bit1:1;  		
+	unsigned  char  button_pressed:1;  //button is pressed and needs handling			
+	unsigned  char  scrolling:1;  		//a scrolling message is active
 	unsigned  char  bit2:1;  
 	unsigned  char  bit3:1;  
 	unsigned  char  bit4:1;  
 	unsigned  char  bit5:1; 
 	unsigned  char  bit6:1;  
-	unsigned  char  bit7:1;	
+	unsigned  char  fault:1;	
 	}bits;
 }flag_t;
 
