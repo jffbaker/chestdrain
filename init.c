@@ -91,6 +91,16 @@ void SYSTEM_Initialize(void)
     ANSELAbits.ANSELA0=0; //digital io
     WPUAbits.WPUA0=1; //pull up enabled
     
+    //*************************************************************************
+    //Setup A1 as interrupt input from ADI7147, with negative going IOC
+    TRISAbits.TRISA1=1;
+    ANSELAbits.ANSELA1=0; //digital io
+    WPUAbits.WPUA1=1; //pull up enabled
+    IOCANbits.IOCAN1=1;
+    IOCAPbits.IOCAP1=0;
+    IOCAFbits.IOCAF1=0;
+    
+    
     //**************************************************************************
     //set up Timer 2 for delay_ms() in util.c.  Off for now.
     T2CON=0b01100100; //off, 1:64 pre, 1:16 post

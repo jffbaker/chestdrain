@@ -14,6 +14,8 @@
 #include "newhaven.h"
 #include "adi.h"
 
+unsigned int tempint;
+
 unsigned char p;
 unsigned char button_buffer;
 unsigned char fault_code;
@@ -75,24 +77,72 @@ void main(void)
     
 
     //nhd_whiteScreen();
-      nhd_splash_screen();
+    nhd_splash_screen();
 
-    //adi_write_single(0x0007,0x0AAA);
-    //delay_ms(1000);
-    //x=adi_read_single(0x0017);
+//    adi_write_single(0x0007,0x1234);
+//    x=adi_read_single(0x0007);
 
     adi_init();  
-      
+    //adi_start();
+    
+//    unsigned char counter,tempchar;
+//    counter=0; 
+    
+    IOCAFbits.IOCAF1=0;
+    adi_read_burst(0x0008,3); //clears INT pin
+    while(1){
+        if(IOCAFbits.IOCAF1){
+            IOCAFbits.IOCAF1=0;
+            adi_read_burst(0x0008,3); //clears INT pin
+            adi_read_conversions();
+        }
+    }
+    
+    //tempint=adi_read_single(0x0007);
+    
+//    while(1)
+//    {
+//        //tempint=adi_read_single(0x0008);
+//        //tempint=adi_read_single(0x0009);
+//        tempint=adi_read_single(0x00A0);
+//        
+//        adi_read_conversions();
+//        //tempint=adi_read_single(0x00A0);
+//        //if(tempint==0x0800){
+//        //    wiggle();
+//        //}
+//            
+//    }
+
     while (1)
     {
         while(!TMR6IF);
         TMR6IF=0;
         check_butt();
 
+//        counter++;
+//        if(4==counter){
+//            counter=0;
+//            adi_read_conversions();
+//            tempint=adi_read_single(0x00A0);
+//        } //end every 100ms
+////    
+//        if(IOCAFbits.IOCAF1){
+//           //adi_stop();
+//           adi_read_conversions();
+//           tempint=adi_read_single(0x00A0);
+//           IOCAFbits.IOCAF1=0;
+//       } 
+
+       
+        
+        
+        
+        
 #ifndef ENABLE_TX
         //transmit();
 #endif
-    }
+    }//end while 1
 }
 
 /*****************************************************************************************
