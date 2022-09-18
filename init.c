@@ -50,11 +50,11 @@ void SYSTEM_Initialize(void)
     ODCONBbits.ODCB0=0; //push-pull
     SLRCONBbits.SLRB0=0; //max slew rate
     
-    //B1 is nRES for Newhaven
+    //B1 is nRES for display
     PORTBbits.RB1=0; //display initially held in reset
     TRISBbits.TRISB1=0; //B1 reset output
     
-    //B2 is CS
+    //B2 is CS for display
     LATBbits.LATB2=1;   //CS is initially high
     TRISBbits.TRISB2=0; //B2 is CS output
         

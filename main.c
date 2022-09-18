@@ -79,14 +79,24 @@ void main(void)
     //nhd_whiteScreen();
     nhd_splash_screen();
 
-//    adi_write_single(0x0007,0x1234);
-//    x=adi_read_single(0x0007);
+    adi_write_single(0x0007,0x1234);
+    x=adi_read_single(0x0007);
 
     adi_init();  
+    //adi_adjust_AF
     //adi_start();
     
 //    unsigned char counter,tempchar;
 //    counter=0; 
+    
+//    unsigned char tempchar;
+//    tempchar=0;
+//    while(1){
+//        tempchar=PORTAbits.RA1;
+//        if(!tempchar){
+//            adi_read_burst(0x0008,3); //clears INT pin
+//        }
+//    }
     
     IOCAFbits.IOCAF1=0;
     adi_read_burst(0x0008,3); //clears INT pin
@@ -95,6 +105,7 @@ void main(void)
             IOCAFbits.IOCAF1=0;
             adi_read_burst(0x0008,3); //clears INT pin
             adi_read_conversions();
+            wiggle();
         }
     }
     

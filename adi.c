@@ -13,9 +13,9 @@
 void adi_init(void){
     static const unsigned int stageBuffer[] = {
     //Stage 0 
-    0xFFFE,
-    0xDFFF,
-    0x0,
+    0xFFED,
+    0xFFFF, //Pos AFE on
+    0x0000, //Pos=0
     0x2626,
     1600,
     1600,
@@ -23,8 +23,8 @@ void adi_init(void){
     1600,
     //Stage 1 
     0xFFFB,
-    0xDFFF,
-    0x0,
+    0x5FFF,
+    0x1800,
     0x2626,
     1650,
     1650,
@@ -32,8 +32,8 @@ void adi_init(void){
     1650,
     //Stage 2 
     0xFFEF,
-    0xDFFF,
-    0x0,
+    0x5FFF,
+    0x1600,
     0x2626,
     1650,
     1650,
@@ -122,7 +122,7 @@ void adi_init(void){
     1150};
     
     adi_write_burst(STAGE0_CONNECTION,stageBuffer,96); 
-    //adi_read_burst(STAGE0_CONNECTION,96);
+    adi_read_burst(STAGE0_CONNECTION,96);
 
 //    //initialization sequence
 //    adi_write_single(0x0000,0b1100000010111100);//full power, decimate 256, active low ints, excitation on, nomral bias.
@@ -161,7 +161,7 @@ void adi_stop(){
 
 
 void adi_read_conversions(){
-    adi_read_burst(0x000B, 16);
+    adi_read_burst(0x000B, 12);
 }
 
 void adi_write_single(unsigned int address, unsigned int  payload){
