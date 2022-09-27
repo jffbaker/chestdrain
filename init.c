@@ -189,14 +189,14 @@ void SYSTEM_Initialize(void)
     //RB5PPS=0x09; //B2 is TX1
     //TRISB&=0b11011111; //B2 is an output
     
-#ifdef ENABLE_TX
-    RB0PPS=0x09; //B0 is TX1
-    TRISBbits.TRISB0 =0; //B2 is an output
+#ifdef TRANSMIT_STRING_ENABLE
+    RC3PPS=0x09; //C3 is TX1
+    TRISCbits.TRISC3 =0; //B2 is an output
     //LATB2=1; //idle high
-    ANSELBbits.ANSELB0=0;
-    WPUBbits.WPUB0=0;
-    ODCONBbits.ODCB0=0; //push-pull
-    SLRCONBbits.SLRB0=0; //max slew rate
+    ANSELCbits.ANSELC2=0;
+    WPUCbits.WPUC2=0;
+    ODCONCbits.ODCC3=0; //push-pull
+    SLRCONCbits.SLRC3=0; //max slew rate
     
     
     BAUD1CONbits.BRG16=1; //use 16 bit generator

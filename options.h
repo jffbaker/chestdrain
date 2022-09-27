@@ -11,7 +11,7 @@
 /****************************************************************
 *	MEAUSUREMENT												*
 *****************************************************************/
-#define ADI_BUF_LEN 128
+#define ADI_BUF_LEN 12
 
 /****************************************************************
 *	MEAUSUREMENT												*
@@ -22,8 +22,9 @@
 /****************************************************************
 *	SERIAL TRANSMISSION											*
 *****************************************************************/
-//#define ENABLE_TX               //enable serial TX.  Else, RB2 is degug output.
-#define	TX_BUF_LEN	(32)		//length of transmit buffer 
+//#define TRANSMIT_ENABLE               //enable serial TX.  Else, RB2 is degug output.
+#define TRANSMIT_STRING_ENABLE
+#define	TX_BUF_LEN	(96)		//length of transmit buffer 
 #define TERMCHAR 0x7F
 #define ESCCHAR  0x1B 
 

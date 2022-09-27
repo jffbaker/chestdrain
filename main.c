@@ -3,7 +3,7 @@
  * Jeff Baker
  * Started 8/28/2022
 */
-
+#include <stdio.h>
 #include "init.h"
 #include "measure.h"
 #include "process.h"
@@ -21,20 +21,21 @@ unsigned char button_buffer;
 unsigned char fault_code;
 
 unsigned int adi_buf[ADI_BUF_LEN];
+unsigned char offset[12];
 
-char tx_idx;				//index to current byte
-char tx_len;				//number of bytes to  transmit
-char tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h
+#if defined(TRANSMIT_ENABLE) || defined(TRANSMIT_STRING_ENABLE)
+unsigned char tx_idx;
+unsigned char tx_len;
+unsigned char tx_buff[TX_BUF_LEN];		//tx_len is set in options.h
+#endif
 
-void check_butt(); //check button and affect flag
+void check_butt(void); //check button and affect flag
+void transmit_string(void);
 
 flag_t flag;
 
 unsigned int x;
 
-#ifdef ENABLE_TX
-void transmit(void);
-#endif
 //******************************************************************************
 //ISRs
 void __interrupt() ISR (void)
@@ -45,16 +46,14 @@ void __interrupt() ISR (void)
         //wiggle();
     }
             
-#ifdef ENABLE_TX
     if(PIE3bits.TX1IE && PIR3bits.TX1IF)		// Is transmit enabled, and is the buffer empty?
 	{
-        TX1REG=tx_buf[tx_idx];	  //load buffer with next byte
+        TX1REG=tx_buff[tx_idx];	  //load buffer with next byte
         tx_idx++;
         if(tx_idx==tx_len){ //is this interrupt the last byte?
             PIE3bits.TX1IE=0;
         }
 	}
-#endif
 }
 
 //******************************************************************************
@@ -79,8 +78,8 @@ void main(void)
     //nhd_whiteScreen();
     //nhd_splash_screen();
 
-    adi_write_single(0x0007,0x1234);
-    x=adi_read_single(0x0007);
+//    adi_write_single(0x0007,0x1234);
+//    x=adi_read_single(0x0007);
 
     adi_init();  
     
@@ -107,6 +106,7 @@ void main(void)
             IOCAFbits.IOCAF1=0;
             adi_read_burst(0x0008,3); //clears INT pin
             adi_read_conversions();
+            transmit_string();
             wiggle();
         }
     }
@@ -193,7 +193,7 @@ waits until serial buffers are not in use
 stuffs buffers with data
 starts up interrupts to send the serial data
 *************************************************************************************/	
-#ifdef ENABLE_TX
+#ifdef TRANSMIT_ENABLE
 void transmit()
 {
     char i,j;
@@ -262,7 +262,46 @@ void transmit()
    	PIE3bits.TXIE=1;					//do this last
 
 }//end of transmit();
-#endif //ENABLE_TX
+#endif //TRANSMIT_ENABLE
+
+
+/************************************************************************************
+void transmit_string()
+ * uses sprintf to put data into a string array, then queus string array for transmission
+starts up interrupts to send the serial data
+*************************************************************************************/	
+void transmit_string()
+{
+#ifdef TRANSMIT_STRING_ENABLE   
+    unsigned char i;
+	while(PIE3bits.TX1IE)					// Wait for last transmission 
+		{
+			continue;				//before writing into tx_buf
+		}
+//    tx_len=sprintf(tx_buff,"%6d\t%6d\t%6d\t%6d.%3s\t%6d\t%6u\n",
+//            ax,
+//            ay,
+//            az,
+//            t_whole,
+//            t_frac_string,
+//            button,
+//            vbat);
+    
+    tx_len=0;
+    for(i=0;i<9;i++){
+        tx_len+=sprintf(tx_buff+tx_len,"%u\t",adi_buf[i]);
+    }
+    //now add the last one
+    tx_len+=sprintf(tx_buff+tx_len,"%u\n\r",adi_buf[9]);
+    
+    //Enable transmission
+	tx_idx=0;			
+	TX1IE=1;
+#endif
+}
+
+
+
 /**
  End of File
  */

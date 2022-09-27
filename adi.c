@@ -122,7 +122,7 @@ void adi_init(void){
     1150};
     
     adi_write_burst(STAGE0_CONNECTION,stageBuffer,96); 
-    adi_read_burst(STAGE0_CONNECTION,96);
+    //adi_read_burst(STAGE0_CONNECTION,96);
 
 //    //initialization sequence
 //    adi_write_single(0x0000,0b1100000010111100);//full power, decimate 256, active low ints, excitation on, nomral bias.
@@ -141,13 +141,13 @@ void adi_init(void){
 //    s[7]=0b0000 1000 0000 0000;
     
     //power up init
-    adi_write_single(PWR_CONTROL,0x00B0);
+    adi_write_single(PWR_CONTROL,0x0080); //9 stages
+    adi_write_single(STAGE_CAL_EN,0x0000);  
     adi_write_single(AMB_COMP_CTRL1,0x0419);
     adi_write_single(AMB_COMP_CTRL2,0x0832);
     adi_write_single(STAGE_LOW_INT_EN,0x0000);
     adi_write_single(STAGE_HIGH_INT_EN,0x0000);
-    adi_write_single(STAGE_COMPLETE_INT_EN,0x0800);    
-    adi_write_single(STAGE_CAL_EN,0x0);  
+    adi_write_single(STAGE_COMPLETE_INT_EN,0x0100);    //only up to stage 9!
 }
 
 void adi_start(){
@@ -158,12 +158,12 @@ void adi_stop(){
     adi_write_single(0x0000,0b0000000010011111);//shutdown, decimate 256, active low ints, excitation on, normal bias.
 }
 
-void adi_adjust_pos_offsets(){
-    unsigned char i,stage_offset_register,offset;
+void adi_adjust_pos_offsets(){  //TODO - this is slow because it goes one offset count per loop.  make it bigger for big diffs.
+    unsigned char i,stage_offset_register;
     unsigned int offset_word;
     for (i=0;i<10;i++){
         stage_offset_register=0x82 + 8*i;
-        offset=0;
+        offset[i]=0;
         adi_buf[10]=i;
         
         IOCAFbits.IOCAF1=0;  //TODO- write this into conversion reader
@@ -179,14 +179,25 @@ void adi_adjust_pos_offsets(){
         adi_read_burst(0x0008,3); //clears INT pin
         adi_read_conversions();
         
-        
-        while (adi_buf[i]>0x7FFF){
-            offset++; //TO DO- limit this to 64
-            if(offset==64){
-                break;
+        while (adi_buf[i]>0x7FFF & offset[i]<63)
+        {
+            if (adi_buf[i]>0xE000){
+                offset[i]+=16;
             }
-            adi_buf[11]=(unsigned int)offset; //for debugging
-            offset_word=((unsigned int)offset)<<8;
+            else if (adi_buf[i]>0xC000){
+                offset[i]+=8;
+            }
+            else if (adi_buf[i]>0x9000){
+                offset[i]+=4;
+            } 
+            else{
+                offset[i]++;
+            }
+            if(offset[i]>=64){
+                offset[i]=63;
+            }
+            
+            offset_word=((unsigned int)offset[i])<<8;
             adi_write_single(stage_offset_register,offset_word);
             
             while(!IOCAFbits.IOCAF1); //wait for conversion done

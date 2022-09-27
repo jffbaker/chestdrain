@@ -18,9 +18,9 @@ extern unsigned char button_buffer;
 extern unsigned char fault_code;
 
 //For serial transmission, usually debug
-extern 	char		tx_idx;				//index to current byte
-extern	char		tx_len;				//number of bytes to  transmit
-extern	char		tx_buf[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h	
+extern 	unsigned char		tx_idx;				//index to current byte
+extern	unsigned char		tx_len;				//number of bytes to  transmit
+extern	unsigned char		tx_buff[TX_BUF_LEN];	//TX_BUF_LEN is set in options.h	
 
 //For Newhaven display
 extern unsigned char row_address[4];
@@ -28,6 +28,7 @@ extern unsigned char row_bit;
 extern unsigned char cursor_row, cursor_col;
 
 extern unsigned int adi_buf[ADI_BUF_LEN];
+extern unsigned char offset[12];
 
 
 //flags
