@@ -40,6 +40,7 @@ unsigned int adi_read_single(unsigned int command);
 void adi_write_burst(unsigned int address, unsigned int payload[], unsigned char n);
 void adi_read_burst(unsigned int address, unsigned char n);
 
+void adi_adjust_pos_offsets(void);
 void adi_read_conversions(void);
 
 void adi_start(void);  //enter full power mode

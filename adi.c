@@ -13,9 +13,9 @@
 void adi_init(void){
     static const unsigned int stageBuffer[] = {
     //Stage 0 
-    0xFFED,
-    0xFFFF, //Pos AFE on
-    0x0000, //Pos=0
+    0xFFFE,
+    0x5FFF, 
+    0x0000, 
     0x2626,
     1600,
     1600,
@@ -24,7 +24,7 @@ void adi_init(void){
     //Stage 1 
     0xFFFB,
     0x5FFF,
-    0x1800,
+    0x0000,
     0x2626,
     1650,
     1650,
@@ -33,7 +33,7 @@ void adi_init(void){
     //Stage 2 
     0xFFEF,
     0x5FFF,
-    0x1600,
+    0x0000,
     0x2626,
     1650,
     1650,
@@ -41,7 +41,7 @@ void adi_init(void){
     1650,
     //Stage 3 
     0xFFBF,
-    0xDFFF,
+    0x5FFF,
     0x0,
     0x2626,
     1650,
@@ -50,7 +50,7 @@ void adi_init(void){
     1650,
     //Stage 4 
     0xFEFF,
-    0xDFFF,
+    0x5FFF,
     0x0,
     0x2626,
     1650,
@@ -59,7 +59,7 @@ void adi_init(void){
     1650,
     //Stage 5 
     0xFBFF,
-    0xDFFF,
+    0x5FFF,
     0x0,
     0x2626,
     1650,
@@ -68,7 +68,7 @@ void adi_init(void){
     1650,
     //Stage 6 
     0xEFFF,
-    0xDFFF,
+    0x5FFF,
     0x0,
     0x2626,
     1650,
@@ -77,7 +77,7 @@ void adi_init(void){
     1650,
     //Stage 7 
     0xFFFF,
-    0xDFFE,
+    0x5FFE,
     0x0,
     0x2626,
     1600,
@@ -86,7 +86,7 @@ void adi_init(void){
     1600,
     //Stage 8 
     0xFFFF,
-    0xFFFB,
+    0x7FFB,
     0x0,
     0x2626,
     1100,
@@ -95,7 +95,7 @@ void adi_init(void){
     1150,
     //Stage 9 
     0xFFFF,
-    0xFFEF,
+    0x7FEF,
     0x0,
     0x2626,
     1100,
@@ -104,7 +104,7 @@ void adi_init(void){
     1150,
     //Stage 10 
     0xFFFF,
-    0xDFBF,
+    0x5FBF,
     0x0,
     0x2626,
     1200,
@@ -141,7 +141,7 @@ void adi_init(void){
 //    s[7]=0b0000 1000 0000 0000;
     
     //power up init
-    adi_write_single(PWR_CONTROL,0xC0BC);
+    adi_write_single(PWR_CONTROL,0x00B0);
     adi_write_single(AMB_COMP_CTRL1,0x0419);
     adi_write_single(AMB_COMP_CTRL2,0x0832);
     adi_write_single(STAGE_LOW_INT_EN,0x0000);
@@ -155,13 +155,54 @@ void adi_start(){
 }
 
 void adi_stop(){
-    adi_write_single(0x0000,0b0000000010111111);//shutdown, decimate 256, active low ints, excitation on, normal bias.
+    adi_write_single(0x0000,0b0000000010011111);//shutdown, decimate 256, active low ints, excitation on, normal bias.
 }
 
+void adi_adjust_pos_offsets(){
+    unsigned char i,stage_offset_register,offset;
+    unsigned int offset_word;
+    for (i=0;i<10;i++){
+        stage_offset_register=0x82 + 8*i;
+        offset=0;
+        adi_buf[10]=i;
+        
+        IOCAFbits.IOCAF1=0;  //TODO- write this into conversion reader
+        adi_read_burst(0x0008,3); //clears INT pin
 
+        while(!IOCAFbits.IOCAF1); //wait for conversion done
+        IOCAFbits.IOCAF1=0;
+        adi_read_burst(0x0008,3); //clears INT pin
+        adi_read_conversions();
+        
+        while(!IOCAFbits.IOCAF1); //wait for conversion done
+        IOCAFbits.IOCAF1=0;
+        adi_read_burst(0x0008,3); //clears INT pin
+        adi_read_conversions();
+        
+        
+        while (adi_buf[i]>0x7FFF){
+            offset++; //TO DO- limit this to 64
+            if(offset==64){
+                break;
+            }
+            adi_buf[11]=(unsigned int)offset; //for debugging
+            offset_word=((unsigned int)offset)<<8;
+            adi_write_single(stage_offset_register,offset_word);
+            
+            while(!IOCAFbits.IOCAF1); //wait for conversion done
+            IOCAFbits.IOCAF1=0;
+            adi_read_burst(0x0008,3); //clears INT pin
+ 
+            while(!IOCAFbits.IOCAF1); //wait for 2nd conversion done
+            IOCAFbits.IOCAF1=0;
+            adi_read_burst(0x0008,3); //clears INT pin
+            adi_read_conversions();
+        } //end of while this zone is still high
+    } //end of loop over all zones
+}//end of function
 
 void adi_read_conversions(){
-    adi_read_burst(0x000B, 12);
+    adi_read_burst(0x000B, 10);
 }
 
 void adi_write_single(unsigned int address, unsigned int  payload){

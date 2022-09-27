@@ -67,7 +67,7 @@ void main(void)
     GIE=1;
     PEIE=1;
 
-    nhd_init(); //display
+    //nhd_init(); //display
 
     //    adi_init(); //cap sensing chip
     
@@ -77,12 +77,14 @@ void main(void)
     
 
     //nhd_whiteScreen();
-    nhd_splash_screen();
+    //nhd_splash_screen();
 
     adi_write_single(0x0007,0x1234);
     x=adi_read_single(0x0007);
 
     adi_init();  
+    
+    adi_adjust_pos_offsets();
     //adi_adjust_AF
     //adi_start();
     
