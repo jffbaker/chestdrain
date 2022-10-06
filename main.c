@@ -4,6 +4,7 @@
  * Started 8/28/2022
 */
 #include <stdio.h>
+#include "globals.h"
 #include "init.h"
 #include "measure.h"
 #include "process.h"
@@ -18,9 +19,10 @@ unsigned int tempint;
 
 unsigned char p;
 unsigned char button_buffer;
-unsigned char fault_code;
+unsigned char fault_timer,fault_code;
 
 unsigned int adi_buf[ADI_BUF_LEN];
+unsigned int c[3][13]; //3 columns, 13 zones each
 unsigned char offset[12];
 
 #if defined(TRANSMIT_ENABLE) || defined(TRANSMIT_STRING_ENABLE)
@@ -203,41 +205,11 @@ void transmit()
 		{
 			continue;				//before writing into tx_buf
 		}
-    buff[0] = HIGH_BYTE(0x55);
-	buff[1] = LOW_BYTE(0x55);
-//    buff[2] = HIGH_BYTE(bot1);
-//    buff[3] = LOW_BYTE(bot1);
-//	buff[4] = HIGH_BYTE(top.mean);
-//	buff[5] = LOW_BYTE(top.mean);
-//	buff[6] = HIGH_BYTE(bot.mean);;
-//    buff[7] = LOW_BYTE(bot.mean);
-//    buff[8] = HIGH_BYTE(top_background.mean);
-//	buff[9] = LOW_BYTE(top_background.mean);
-//	buff[10]= HIGH_BYTE(bot_background.mean);
-//    buff[11]= LOW_BYTE(bot_background.mean);
-//    
-//    buff[12] = HIGH_BYTE(dtop);
-//	buff[13] = LOW_BYTE(dtop);
-//	buff[14]= HIGH_BYTE(dbot);
-//    buff[15]= LOW_BYTE(dbot);
-//    
-//    buff[16] = HIGH_BYTE(d1);
-//	buff[17] = LOW_BYTE(d1);
-//	buff[18] = HIGH_BYTE(d2);
-//    buff[19] = LOW_BYTE(d2);
-//    
-//    buff[20] = HIGH_BYTE(z);
-//	buff[21] = LOW_BYTE(z);
-//	buff[22] = HIGH_BYTE(y0);
-//    buff[23] = LOW_BYTE(y0);
-//    
-//    buff[24] = 0;
-//    buff[25] = state;
-//    
-//    buff[26] = 0;
-//    buff[27] = state_counter;
-    
-    tx_len=2; //one more than highest index
+    for (i=0;i<13;i++){
+        buff[2*i] = HIGH_BYTE(adi_buff[i]);
+        buff[2*i+1] = LOW_BYTE(adi_buff[i]);
+    }
+    tx_len=28; //one more than highest index
   
     //escape any data that is esc or term chars
     j=0;

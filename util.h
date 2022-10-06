@@ -10,8 +10,9 @@
 
     
 
-
-
+/*Faults
+ */
+#define FAULT_SPI_BF    0x01
 
 
 /****************************************************************
@@ -41,6 +42,8 @@ signed int max_int(signed int a, signed int b);
 signed int min_int(signed int a, signed int b);
 unsigned char array_max_int(signed int a[], unsigned char size);
 unsigned char array_min_int(signed int a[], unsigned char size);
+
+void wait_for_BF(void);
 
 unsigned int read_tmr5(void);
 void write_tmr5(unsigned int timerVal);

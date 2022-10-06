@@ -19,13 +19,13 @@ void SYSTEM_Initialize(void)
     //SAFETY TO-DO- add a timeout to this external oscillator turn-on
     //just using a for-loop and delay
     while(!OSCSTATbits.SOR);
-    //I expected this to give 32768 tics per sec, but it gives 1 per 2s
-    T0CON0=0b10010000; //On, 16 bit, 1:1 postscaler 1/32768 tics
-    T0CON1=0b10110000;  //SOSC, async, 1:1
-    TRISCbits.TRISC3=0;
-    RC3PPS=0x0F;
+    TMR0H=0x7F; //TMR0IF and TMR0 output pin on RC3 will toggle when TMR0L matches this
+    T0CON0=0b10000000; //On, 8 bit, 1:1 postscaler 1/32768 tics
+    T0CON1=0b10110111;  //SOSC, async, 1:128
+    TRISCbits.TRISC2=0;
+    RC2PPS=0x0F;
     TMR0IF=0;
-    //TMR0IE=1;
+    TMR0IE=1;
     
     //**************************************************************************
     //set up Timer 6 as a 10 ms heartbeat timer

@@ -16,3 +16,4 @@
 
 #endif	/* MEASURE_H */
 
+void measure(void);

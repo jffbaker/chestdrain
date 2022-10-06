@@ -138,13 +138,13 @@ unsigned char nhd_command(unsigned char byte){
     byte=reverse_byte(byte); //reverse so LSB first
     CS_LOW();
     SSP1BUF=0b11111000; //"start byte, reversed so LSB goes first"
-    while(BF==0);
+    wait_for_BF();
     tempchar=byte&0xF0;
     SSP1BUF=tempchar; //send low nibble
-    while(BF==0);
+    wait_for_BF();
     tempchar=(byte&0x0F)<<4;
     SSP1BUF=tempchar; //send high nibble
-    while(BF==0);
+    wait_for_BF();
      CS_HIGH();
     return(SSP1BUF); //Does this read clear BF?
 }
@@ -154,13 +154,13 @@ unsigned char nhd_data(unsigned char byte){
     byte=reverse_byte(byte);
     CS_LOW();
     SSP1BUF=0b11111010; //start byte,reversed so LSB goes first    
-    while(BF==0);
+    wait_for_BF();
     tempchar=byte&0xF0;
     SSP1BUF=tempchar;
-    while(BF==0);
+    wait_for_BF();
     tempchar=(byte&0x0F)<<4;
     SSP1BUF=tempchar;
-    while(BF==0);
+    wait_for_BF();
     CS_HIGH();
     return(SSP1BUF); //Does this read clear BF?
 }
@@ -176,10 +176,10 @@ unsigned char spi_read_single(unsigned char command){
     command|=0x80; //set highest bit to 1 for read
     CS_LOW();
     SSP1BUF=command; //send address
-    while(BF==0); //wait til done
+    wait_for_BF();
     p=SSP1BUF; //read to clear BF
     SSP1BUF=command; //send anything to receive byte
-    while(BF==0); //wait til done
+    wait_for_BF();
     CS_HIGH();
     return(SSP1BUF);
 }
@@ -189,12 +189,12 @@ void spi_read_burst(unsigned char address, unsigned char* payload, unsigned char
     address|=0x80; //set highest bit to 1 for read
     CS_LOW();
     SSP1BUF=address; //send address
-    while(BF==0); //wait til done
+    wait_for_BF();
     p=SSP1BUF; //read to clear BF
     //read data
     for(i = 0; i < n; i++){
         SSP1BUF=address; //send anything to receive byte
-        while(BF==0); //wait til done
+        wait_for_BF();
         payload[i]=SSP1BUF;
     }
     CS_HIGH();

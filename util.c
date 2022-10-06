@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "globals.h"
 #include "options.h"
+#include "util.h"
 
 
 /****************************************************************
@@ -83,7 +84,7 @@ unsigned int abs_int(signed int value)
 }
 
 //**********************************************************************/
-unsigned int abs_char(signed char value)
+unsigned char abs_char(signed char value)
 {
     if (value < 0) {
         value = value * (-1);
@@ -166,6 +167,18 @@ void wiggle_high(void)
 void wiggle_low(void)
 {
         LATC&=0b11101111;
+}
+
+void wait_for_BF(void){
+    unsigned char fault_timer=0;
+    while(BF==0){
+        fault_timer++;
+        if(0==fault_timer){
+            fault_code=FAULT_SPI_BF;
+            flag.bits.fault=1;
+        }
+    }
+    return;
 }
 
 unsigned int read_tmr5(void)

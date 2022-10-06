@@ -28,6 +28,7 @@ extern unsigned char row_bit;
 extern unsigned char cursor_row, cursor_col;
 
 extern unsigned int adi_buf[ADI_BUF_LEN];
+extern unsigned int c[3][13]; //3 columns, 13 zones each
 extern unsigned char offset[12];
 
 

@@ -141,13 +141,13 @@ void adi_init(void){
 //    s[7]=0b0000 1000 0000 0000;
     
     //power up init
-    adi_write_single(PWR_CONTROL,0x0080); //9 stages
+    adi_write_single(PWR_CONTROL,0x0090); //stages 0 to 9
     adi_write_single(STAGE_CAL_EN,0x0000);  
     adi_write_single(AMB_COMP_CTRL1,0x0419);
     adi_write_single(AMB_COMP_CTRL2,0x0832);
     adi_write_single(STAGE_LOW_INT_EN,0x0000);
     adi_write_single(STAGE_HIGH_INT_EN,0x0000);
-    adi_write_single(STAGE_COMPLETE_INT_EN,0x0100);    //only up to stage 9!
+    adi_write_single(STAGE_COMPLETE_INT_EN,0x0200);    //int only on stage 9 complete!
 }
 
 void adi_start(){
@@ -224,15 +224,17 @@ void adi_write_single(unsigned int address, unsigned int  payload){
     ADI_CS_LOW();
     SSP1BUF=tempchar;  //send first byte of command
     tempchar=LOW_BYTE(address);
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=tempchar; //send second byte of command 
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=HIGH_BYTE(payload); //send high byte of payload
-     while(BF==0);
+    wait_for_BF();
     SSP1BUF=LOW_BYTE(payload); //send low byte of payload
-    while(BF==0);
+    wait_for_BF();
     ADI_CS_HIGH();
 }
+
+
 
 unsigned int adi_read_single(unsigned int address){
     unsigned char tempchar,ph,pl;
@@ -243,14 +245,14 @@ unsigned int adi_read_single(unsigned int address){
     tempchar|=0b11100100; //ADI specified pattern for first byte, R/nW=1 for read
     SSP1BUF=tempchar;  //send pattern and two high bits of address
     tempchar=LOW_BYTE(address);
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=tempchar; //send lower byte of address
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=0x00; //send junk to clock in high byte of data
-    while(BF==0);
+    wait_for_BF();
     ph=SSP1BUF;
     SSP1BUF=0x00; //send junk to clock in low byte of data
-    while(BF==0);
+    wait_for_BF();
     pl=SSP1BUF;
     ADI_CS_HIGH();
     return( ((unsigned int)ph)<<8 | ((unsigned int)pl) );
@@ -266,16 +268,16 @@ void adi_write_burst(unsigned int address, unsigned int payload[], unsigned char
     ADI_CS_LOW();
     SSP1BUF=tempchar;  //send first byte of command
     tempchar=LOW_BYTE(address);
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=tempchar; //send second byte of command 
-    while(BF==0);
+    wait_for_BF();
     
     //loop over all words in payload
     for(tempchar=0;tempchar<n;tempchar++){
         SSP1BUF=HIGH_BYTE(payload[tempchar]); //send high byte of payload
-        while(BF==0);
+        wait_for_BF();
         SSP1BUF=LOW_BYTE(payload[tempchar]); //send low byte of payload
-        while(BF==0);    
+        wait_for_BF();  
     }
     
     ADI_CS_HIGH();
@@ -290,16 +292,16 @@ void adi_read_burst(unsigned int address, unsigned char n){
     tempchar&=(unsigned char)(address>>8); //two LSB of first byte are two highest bits of address.
     tempchar|=0b11100100; //ADI specified pattern for first byte, R/nW=1 for read
     SSP1BUF=tempchar;  //send pattern and two high bits of address
-    while(BF==0);
+    wait_for_BF();
     SSP1BUF=LOW_BYTE(address); //send lower byte of address
-    while(BF==0);
+    wait_for_BF();
 
     for(tempchar=0;tempchar<n;tempchar++){
         SSP1BUF=0x00; //send junk to clock in high byte of data
-        while(BF==0);
+        wait_for_BF();
         ph=SSP1BUF;
         SSP1BUF=0x00; //send junk to clock in low byte of data
-        while(BF==0);
+        wait_for_BF();
         pl=SSP1BUF;
         adi_buf[tempchar]=( ((unsigned int)ph)<<8 | ((unsigned int)pl) );
     }
