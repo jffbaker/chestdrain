@@ -11,209 +11,176 @@
 #define ADI_CS_HIGH()   LATB0=1
 
 void adi_init(void){
-    static const unsigned int stageBuffer[] = {
-    //Stage 0 
-    0xFFFE,
-    0x5FFF, 
-    0x0000, 
-    0x2626,
-    1600,
-    1600,
-    1600,
-    1600,
-    //Stage 1 
-    0xFFFB,
-    0x5FFF,
-    0x0000,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 2 
-    0xFFEF,
-    0x5FFF,
-    0x0000,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 3 
-    0xFFBF,
-    0x5FFF,
-    0x0,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 4 
-    0xFEFF,
-    0x5FFF,
-    0x0,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 5 
-    0xFBFF,
-    0x5FFF,
-    0x0,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 6 
-    0xEFFF,
-    0x5FFF,
-    0x0,
-    0x2626,
-    1650,
-    1650,
-    1650,
-    1650,
-    //Stage 7 
-    0xFFFF,
-    0x5FFE,
-    0x0,
-    0x2626,
-    1600,
-    1600,
-    1600,
-    1600,
-    //Stage 8 
-    0xFFFF,
-    0x7FFB,
-    0x0,
-    0x2626,
-    1100,
-    1100,
-    1150,
-    1150,
-    //Stage 9 
-    0xFFFF,
-    0x7FEF,
-    0x0,
-    0x2626,
-    1100,
-    1100,
-    1150,
-    1150,
-    //Stage 10 
-    0xFFFF,
-    0x5FBF,
-    0x0,
-    0x2626,
-    1200,
-    1200,
-    1300,
-    1300,
-    //Stage 11 
-    0xFFFF,
-    0xDEFF,
-    0x0,
-    0x2626,
-    1100,
-    1100,
-    1150,
-    1150};
-    
-    adi_write_burst(STAGE0_CONNECTION,stageBuffer,96); 
-    //adi_read_burst(STAGE0_CONNECTION,96);
-
-//    //initialization sequence
-//    adi_write_single(0x0000,0b1100000010111100);//full power, decimate 256, active low ints, excitation on, nomral bias.
-//    adi_write_single(0x0001,0x00); //all cal disabled
-//    adi_write_single(0x0005,0x00); //no low ints, GPIO disabled
-//    adi_write_single(0x0006,0x00); //no high ints
-//    adi_write_single(0x0007,0x0800);//stage 11 completion interrupt enable; no GPIO int
-//   
-//    s[0]=0b0000000010110000; //normal bias, exc on, act low ints, 256 decimation, 12 stages, full power mode
-//    s[1]=0x00; //all cal disabled, skip modes 00
-//    s[2]=0b00; 
-//    s[3]=0x00;  // no amb recal?
-//    s[4]=0x00;
-//    s[5]=0x00; //no low ints
-//    s[6]=0x00; //no stage high ints, no gpio int
-//    s[7]=0b0000 1000 0000 0000;
-    
     //power up init
-    adi_write_single(PWR_CONTROL,0x0090); //stages 0 to 9
+    adi_stop();
     adi_write_single(STAGE_CAL_EN,0x0000);  
     adi_write_single(AMB_COMP_CTRL1,0x0419);
     adi_write_single(AMB_COMP_CTRL2,0x0832);
     adi_write_single(STAGE_LOW_INT_EN,0x0000);
     adi_write_single(STAGE_HIGH_INT_EN,0x0000);
-    adi_write_single(STAGE_COMPLETE_INT_EN,0x0200);    //int only on stage 9 complete!
+//    adi_write_single(STAGE_COMPLETE_INT_EN,0x0200);    //int only on stage 9 complete!
+//    adi_write_single(STAGE_COMPLETE_INT_EN,0x0080);    //int only on stage 7 complete!
+    adi_write_single(STAGE_COMPLETE_INT_EN,0x0800);    //int only on stage 12 complete!
 }
 
 void adi_start(){
-    adi_write_single(0x0000,0b0000000010111100);//full power, decimate 256, active low ints, excitation on, normal bias.
+    adi_write_single(PWR_CONTROL,0b0000000010111100);//full power, decimate 256, active low ints, excitation on, normal bias, 12 stages
 }
 
 void adi_stop(){
-    adi_write_single(0x0000,0b0000000010011111);//shutdown, decimate 256, active low ints, excitation on, normal bias.
+    adi_write_single(PWR_CONTROL,0b0000000010111111);//shutdown, decimate 256, active low ints, excitation on, normal bias, 12 stages
 }
 
-void adi_adjust_pos_offsets(){  //TODO - this is slow because it goes one offset count per loop.  make it bigger for big diffs.
-    unsigned char i,stage_offset_register;
-    unsigned int offset_word;
-    for (i=0;i<10;i++){
-        stage_offset_register=0x82 + 8*i;
-        offset[i]=0;
-        adi_buf[10]=i;
-        
-        IOCAFbits.IOCAF1=0;  //TODO- write this into conversion reader
-        adi_read_burst(0x0008,3); //clears INT pin
+void adi_clear_int(){
+    IOCAFbits.IOCAF1=0;
+    adi_read_burst(0x0008,3); //clears INT pin
+}
 
-        while(!IOCAFbits.IOCAF1); //wait for conversion done
-        IOCAFbits.IOCAF1=0;
-        adi_read_burst(0x0008,3); //clears INT pin
-        adi_read_conversions();
+void adi_wait_for_int(){
+    unsigned char fault_timer=0;
+    while(!IOCAFbits.IOCAF1){
+        fault_timer++;
+        delay_ms(1);
+        if(fault_timer>50){
+            fault_code=FAULT_ADI_NO_INT;
+            flag.bits.fault=1;
+            break;
+        }
+    }
+    return;
+}
+
+void adi_adjust_pos_offsets(){  //TO DO- fine tune the step sizes
+    unsigned int i;
+    unsigned int stage_offset_register;
+    unsigned int offset_word;
+
+    //get initial values of all zones
+    adi_clear_int();
+    adi_wait_for_int();
+    adi_clear_int();
+    adi_wait_for_int();
+    adi_read_conversions();
+ 
+    for (i=0;i<12;i++){
+        stage_offset_register=0x82 + 8*i;
+        pos_offset[i]=0;
         
-        while(!IOCAFbits.IOCAF1); //wait for conversion done
-        IOCAFbits.IOCAF1=0;
-        adi_read_burst(0x0008,3); //clears INT pin
-        adi_read_conversions();
-        
-        while (adi_buf[i]>0x7FFF & offset[i]<63)
+        while (adi_buff[i]>0x7FFF & pos_offset[i]<64)
         {
-            if (adi_buf[i]>0xE000){
-                offset[i]+=16;
+            if (adi_buff[i]>0xE000){
+                pos_offset[i]+=16;
             }
-            else if (adi_buf[i]>0xC000){
-                offset[i]+=8;
+            else if (adi_buff[i]>0xC000){
+                pos_offset[i]+=8;
             }
-            else if (adi_buf[i]>0x9000){
-                offset[i]+=4;
+            else if (adi_buff[i]>0x9000){
+                pos_offset[i]+=4;
             } 
             else{
-                offset[i]++;
+                pos_offset[i]++;
             }
-            if(offset[i]>=64){
-                offset[i]=63;
+            if(pos_offset[i]>63){
+                pos_offset[i]=63;
             }
             
-            offset_word=((unsigned int)offset[i])<<8;
+            offset_word=((unsigned int)pos_offset[i])<<8;
             adi_write_single(stage_offset_register,offset_word);
             
-            while(!IOCAFbits.IOCAF1); //wait for conversion done
-            IOCAFbits.IOCAF1=0;
-            adi_read_burst(0x0008,3); //clears INT pin
- 
-            while(!IOCAFbits.IOCAF1); //wait for 2nd conversion done
-            IOCAFbits.IOCAF1=0;
-            adi_read_burst(0x0008,3); //clears INT pin
+            adi_clear_int();
+            adi_wait_for_int();
+            adi_clear_int();
+            adi_wait_for_int();
             adi_read_conversions();
+            
         } //end of while this zone is still high
     } //end of loop over all zones
 }//end of function
 
+void adi_adjust_differential_offsets(){  //TO DO- fine tune the step sizes
+    unsigned int i;
+    unsigned int stage_offset_register;
+    unsigned int offset_word;
+
+    //get initial values of all zones
+    adi_clear_int();
+    adi_wait_for_int();
+    adi_clear_int();
+    adi_wait_for_int();
+    adi_read_conversions();
+ 
+    for (i=0;i<12;i++){
+        stage_offset_register=0x82 + 8*i;
+        differential_pos_offset[i]=0;
+         
+        while (adi_buff[i]>0x7FFF & differential_pos_offset[i]<64)
+        {
+            if (adi_buff[i]>0xE000){
+                differential_pos_offset[i]+=16;
+            }
+            else if (adi_buff[i]>0xC000){
+                differential_pos_offset[i]+=8;
+            }
+            else if (adi_buff[i]>0x9000){
+                differential_pos_offset[i]+=4;
+            } 
+            else{
+                differential_pos_offset[i]++;
+            }
+            if(differential_pos_offset[i]>63){
+                differential_pos_offset[i]=63;
+            }
+            
+            offset_word=((unsigned int)differential_pos_offset[i])<<8;
+            adi_write_single(stage_offset_register,offset_word);
+            
+            adi_clear_int();
+            adi_wait_for_int();
+            adi_clear_int();
+            adi_wait_for_int();
+            adi_read_conversions();
+        } //end of while this zone is still high
+
+        //now if positive offset is 0, it means the zone was already below 0x7FFF.
+        //see if we want to raise the negative offset
+        differential_neg_offset[i]=0;
+        if(differential_pos_offset[i]==0){
+            while (adi_buff[i]<0x7FFF & differential_neg_offset[i]<64)
+            {
+                if (adi_buff[i]>0xE000){
+                    differential_neg_offset[i]+=16;
+                }
+                else if (adi_buff[i]>0xC000){
+                    differential_neg_offset[i]+=8;
+                }
+                else if (adi_buff[i]>0x9000){
+                    differential_neg_offset[i]+=4;
+                } 
+                else{
+                    differential_neg_offset[i]++;
+                }
+                if(differential_neg_offset[i]>63){
+                    differential_neg_offset[i]=63;
+                }
+
+                offset_word=((unsigned int)differential_neg_offset[i]);
+                adi_write_single(stage_offset_register,offset_word);
+
+                adi_clear_int();
+                adi_wait_for_int();
+                adi_clear_int();
+                adi_wait_for_int();
+                adi_read_conversions();
+            } //end of while this zone is still low
+        } //end of if pos offset was zero
+
+    } //end of loop over all zones
+}//end of function
+
+
+
 void adi_read_conversions(){
-    adi_read_burst(0x000B, 10);
+    adi_read_burst(0x000B, 12);
 }
 
 void adi_write_single(unsigned int address, unsigned int  payload){
@@ -233,8 +200,6 @@ void adi_write_single(unsigned int address, unsigned int  payload){
     wait_for_BF();
     ADI_CS_HIGH();
 }
-
-
 
 unsigned int adi_read_single(unsigned int address){
     unsigned char tempchar,ph,pl;
@@ -285,7 +250,7 @@ void adi_write_burst(unsigned int address, unsigned int payload[], unsigned char
 
 
 void adi_read_burst(unsigned int address, unsigned char n){
-    //affects global buffer adi_buf[]
+    //affects global buffer adi_buff[]
     unsigned char tempchar,ph,pl;
     ADI_CS_LOW();
     tempchar=0;
@@ -303,10 +268,159 @@ void adi_read_burst(unsigned int address, unsigned char n){
         SSP1BUF=0x00; //send junk to clock in low byte of data
         wait_for_BF();
         pl=SSP1BUF;
-        adi_buf[tempchar]=( ((unsigned int)ph)<<8 | ((unsigned int)pl) );
+        adi_buff[tempchar]=( ((unsigned int)ph)<<8 | ((unsigned int)pl) );
     }
     ADI_CS_HIGH();
 }
 
+void adi_setup_conversions(unsigned int buffer[]){
+    //sets 12 zones to positive single ended, pos AFE offset only
+    unsigned char i;
+    unsigned int stage_connection_register;
+    unsigned int tempint;
+    
+    //TO DO- write retry on fail
+    for (i=0;i<12;i++){
+        stage_connection_register=0x80 + 8*i;
+        tempint=buffer[2*i];
+        adi_write_single(stage_connection_register,tempint);
+        tempint=adi_read_single(stage_connection_register);
+        if(tempint!=buffer[2*i]){
+            fault_code=FAULT_ADI_VERIFY;
+            flag.bits.fault=1;
+        }
+        
+        tempint=buffer[2*i + 1];
+        stage_connection_register++;
+        adi_write_single(stage_connection_register,tempint);   
+        tempint=adi_read_single(stage_connection_register);
+        if(tempint!=buffer[2*i+1]){
+            fault_code=FAULT_ADI_VERIFY;
+            flag.bits.fault=1;
+        }
+        
+        stage_connection_register++;
+        adi_write_single(stage_connection_register,0);   //AFE offsets start at 0
+        tempint=adi_read_single(stage_connection_register);
+        if(tempint){
+            fault_code=FAULT_ADI_VERIFY;
+            flag.bits.fault=1;
+        }
+        
+    }
+}
+
+
+//  //4 independent zones, all single ended
+//    //4 differenctial measurements
+//    static const unsigned int stageBuffer[] = {
+//    //Stage 0: zone 0, pos offset only
+//    0xFFFE,
+//    0x5FFF, 
+//    0x0000, 
+//    0x2626,
+//    1600,
+//    1600,
+//    1600,
+//    1600,
+//    //Stage 1: zone 1, pos offset only 
+//    0xFFFB,
+//    0x5FFF,
+//    0x0000,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 2: zone 2, pos offset only
+//    0xFFEF,
+//    0x5FFF,
+//    0x0000,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 3: zone 3, pos offset only 
+//    0xFFBF,
+//    0x5FFF,
+//    0x0,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 4, zone +0, -2, both pos and neg offsets, differential 
+//    0xFEDE,
+//    0x3FFF,
+//    0x0,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 5, +0 -1, both pos and neg offsets, differential 
+//    0xFBF6,
+//    0x3FFF,
+//    0x0,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 6, +1, -3, both pos and neg offsets, differential 
+//    0xEF7B,
+//    0x3FFF,
+//    0x0,
+//    0x2626,
+//    1650,
+//    1650,
+//    1650,
+//    1650,
+//    //Stage 7, +2, -3, both pos and neg offsets, differential 
+//    0xFF6F,
+//    0x3FFE,
+//    0x0,
+//    0x2626,
+//    1600,
+//    1600,
+//    1600,
+//    1600,
+//    //Stage 8 
+//    0xFFFF,
+//    0x7FFB,
+//    0x0,
+//    0x2626,
+//    1100,
+//    1100,
+//    1150,
+//    1150,
+//    //Stage 9 
+//    0xFFFF,
+//    0x7FEF,
+//    0x0,
+//    0x2626,
+//    1100,
+//    1100,
+//    1150,
+//    1150,
+//    //Stage 10 
+//    0xFFFF,
+//    0x5FBF,
+//    0x0,
+//    0x2626,
+//    1200,
+//    1200,
+//    1300,
+//    1300,
+//    //Stage 11 
+//    0xFFFF,
+//    0xDEFF,
+//    0x0,
+//    0x2626,
+//    1100,
+//    1100,
+//    1150,
+//    1150};
 
 

@@ -12,7 +12,10 @@
 
 /*Faults
  */
-#define FAULT_SPI_BF    0x01
+#define FAULT_NONE          0x00
+#define FAULT_SPI_BF        0x01
+#define FAULT_ADI_NO_INT    0x02
+#define FAULT_ADI_VERIFY    0x03
 
 
 /****************************************************************

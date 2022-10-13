@@ -25,16 +25,16 @@ void SYSTEM_Initialize(void)
     TRISCbits.TRISC2=0;
     RC2PPS=0x0F;
     TMR0IF=0;
-    TMR0IE=1;
+    //TMR0IE=1;
     
-    //**************************************************************************
-    //set up Timer 6 as a 10 ms heartbeat timer
-    T6PR=0x9C; //about 10ms
-    T6CON=0b11101111; //off, 64 pre, 16 post 
-    T6CLKCON=0b00000001; //Fosc/4
-    //64e6/(4*64*16)=64 tics, so 256 tics is 16,4ms
-    TMR6IE=0;
-    TMR6IF=0;
+//    //**************************************************************************
+//    //set up Timer 6 as a 10 ms heartbeat timer
+//    T6PR=0x9C; //about 10ms
+//    T6CON=0b11101111; //off, 64 pre, 16 post 
+//    T6CLKCON=0b00000001; //Fosc/4
+//    //64e6/(4*64*16)=64 tics, so 256 tics is 16,4ms
+//    TMR6IE=0;
+//    TMR6IF=0;
 
     //**************************************************************************
     // Setup SPI for the Newhaven display chip and ADI7147
@@ -189,7 +189,7 @@ void SYSTEM_Initialize(void)
     //RB5PPS=0x09; //B2 is TX1
     //TRISB&=0b11011111; //B2 is an output
     
-#ifdef TRANSMIT_STRING_ENABLE
+#ifdef TRANSMIT_ENABLE
     RC3PPS=0x09; //C3 is TX1
     TRISCbits.TRISC3 =0; //B2 is an output
     //LATB2=1; //idle high

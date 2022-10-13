@@ -21,9 +21,11 @@ unsigned char p;
 unsigned char button_buffer;
 unsigned char fault_timer,fault_code;
 
-unsigned int adi_buf[ADI_BUF_LEN];
+unsigned int adi_buff[ADI_BUF_LEN];
 unsigned int c[3][13]; //3 columns, 13 zones each
-unsigned char offset[12];
+unsigned char pos_offset[12];
+unsigned char differential_pos_offset[12];
+unsigned char differential_neg_offset[12];
 
 #if defined(TRANSMIT_ENABLE) || defined(TRANSMIT_STRING_ENABLE)
 unsigned char tx_idx;
@@ -32,6 +34,7 @@ unsigned char tx_buff[TX_BUF_LEN];		//tx_len is set in options.h
 #endif
 
 void check_butt(void); //check button and affect flag
+void transmit(void);
 void transmit_string(void);
 
 flag_t flag;
@@ -83,9 +86,14 @@ void main(void)
 //    adi_write_single(0x0007,0x1234);
 //    x=adi_read_single(0x0007);
 
+
+//    adi_setup_conversions(single_ended_setup);
+    adi_setup_conversions(differential_setup);
     adi_init();  
+    adi_start();
+    //adi_adjust_pos_offsets();
+    adi_adjust_differential_offsets();
     
-    adi_adjust_pos_offsets();
     //adi_adjust_AF
     //adi_start();
     
@@ -101,18 +109,18 @@ void main(void)
 //        }
 //    }
     
-    IOCAFbits.IOCAF1=0;
-    adi_read_burst(0x0008,3); //clears INT pin
-    while(1){
-        if(IOCAFbits.IOCAF1){
-            IOCAFbits.IOCAF1=0;
-            adi_read_burst(0x0008,3); //clears INT pin
-            adi_read_conversions();
-            transmit_string();
-            wiggle();
-        }
-    }
-    
+//    IOCAFbits.IOCAF1=0;
+//    adi_read_burst(0x0008,3); //clears INT pin
+//    while(1){
+//        if(IOCAFbits.IOCAF1){
+//            IOCAFbits.IOCAF1=0;
+//            adi_read_burst(0x0008,3); //clears INT pin
+//            adi_read_conversions();
+//            transmit_string();
+//            wiggle();
+//        }
+//    }
+//    
     //tempint=adi_read_single(0x0007);
     
 //    while(1)
@@ -131,9 +139,24 @@ void main(void)
 
     while (1)
     {
-        while(!TMR6IF);
-        TMR6IF=0;
-        check_butt();
+           //TO Do- put button on an IOC ISR so it does not have to be polled
+            //and we can sleep
+        
+        //change transmit to binary and graph in labview
+        //add a low pass filter?  Or just average ?
+        //add a "mark" button to labview
+        // add accelerometer
+        // 
+        
+        //TMR6IF=0;
+         //check_butt();
+
+        while(!TMR0IF);
+        TMR0IF=0;
+        measure();
+        //process();
+        transmit();
+        //display();
 
 //        counter++;
 //        if(4==counter){
@@ -149,10 +172,6 @@ void main(void)
 //           IOCAFbits.IOCAF1=0;
 //       } 
 
-       
-        
-        
-        
         
 #ifndef ENABLE_TX
         //transmit();
@@ -215,23 +234,23 @@ void transmit()
     j=0;
     for (i=0;i<tx_len;i++){
         if(buff[i]==ESCCHAR || buff[i]==TERMCHAR){
-            tx_buf[j]=ESCCHAR;
-            tx_buf[j+1]=buff[i]^0x20; //xor with 0x20
+            tx_buff[j]=ESCCHAR;
+            tx_buff[j+1]=buff[i]^0x20; //xor with 0x20
             j=j+2;
         }
         else{
-            tx_buf[j]=buff[i];
+            tx_buff[j]=buff[i];
             j=j+1;
         }
     }//end loop over whole buffer
 
     //add a term
-    tx_buf[j]=TERMCHAR;
+    tx_buff[j]=TERMCHAR;
     tx_len=j+1;
     
 	//Enable transmission
 	tx_idx=0;
-   	PIE3bits.TXIE=1;					//do this last
+   	TX1IE=1;					//do this last
 
 }//end of transmit();
 #endif //TRANSMIT_ENABLE
@@ -261,10 +280,10 @@ void transmit_string()
     
     tx_len=0;
     for(i=0;i<9;i++){
-        tx_len+=sprintf(tx_buff+tx_len,"%u\t",adi_buf[i]);
+        tx_len+=sprintf(tx_buff+tx_len,"%u\t",adi_buff[i]);
     }
     //now add the last one
-    tx_len+=sprintf(tx_buff+tx_len,"%u\n\r",adi_buf[9]);
+    tx_len+=sprintf(tx_buff+tx_len,"%u\n\r",adi_buff[9]);
     
     //Enable transmission
 	tx_idx=0;			

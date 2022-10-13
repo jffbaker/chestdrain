@@ -176,6 +176,7 @@ void wait_for_BF(void){
         if(0==fault_timer){
             fault_code=FAULT_SPI_BF;
             flag.bits.fault=1;
+            break;
         }
     }
     return;
